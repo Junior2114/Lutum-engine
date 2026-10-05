@@ -1,0 +1,33 @@
+# Автоматически нормализовать переносы строк
+* text=auto
+
+# Исходный код — всегда LF в репозитории
+*.cpp   text eol=lf
+*.h     text eol=lf
+*.hpp   text eol=lf
+*.c     text eol=lf
+*.cc    text eol=lf
+*.cmake text eol=lf
+CMakeLists.txt text eol=lf
+
+# Скрипты
+*.sh    text eol=lf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# Бинарные файлы — не трогать
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.wav   binary
+*.mp3   binary
+*.ogg   binary
+*.ttf   binary
+*.otf   binary
+*.exe   binary
+*.dll   binary
+*.lib   binary
+*.pdb   binary
