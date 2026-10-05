@@ -22,6 +22,21 @@ bool Application::Init(const char* title, int width, int height) {
         return false;
     }
 
+    // Оборачиваем SDL_Renderer в наш Renderer
+    m_rendererWrap = Renderer(m_renderer);
+
+    // Загружаем спрайт игрока
+    if (!m_playerTexture.LoadFromFile(m_renderer,
+                                      "assets/textures/player.png")) {
+        std::cerr << "Warning: player.png not loaded. "
+                  << "Place it in assets/textures/" << std::endl;
+        // Не выходим — движок продолжит работать без спрайта
+    } else {
+        std::cout << "Loaded player.png ("
+                  << m_playerTexture.GetWidth() << "x"
+                  << m_playerTexture.GetHeight() << ")" << std::endl;
+    }
+
     m_frequency   = (double)SDL_GetPerformanceFrequency();
     m_lastCounter = SDL_GetPerformanceCounter();
     m_running     = true;
@@ -33,21 +48,13 @@ bool Application::Init(const char* title, int width, int height) {
 
 void Application::Run() {
     while (m_running) {
-        // 1. Delta time
         Uint64 now = SDL_GetPerformanceCounter();
         float dt = (float)((now - m_lastCounter) / m_frequency);
         m_lastCounter = now;
 
-        // 2. Начало кадра — фиксируем предыдущее состояние ввода
         m_input.BeginFrame();
-
-        // 3. События
         PollEvents();
-
-        // 4. Логика
         Update(dt);
-
-        // 5. Рендер
         Render();
     }
 }
@@ -55,10 +62,7 @@ void Application::Run() {
 void Application::PollEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        // Сначала отдаём событие в Input — он обновит своё состояние
         m_input.ProcessEvent(event);
-
-        // Потом обрабатываем системные события
         switch (event.type) {
             case SDL_EVENT_QUIT:
                 m_running = false;
@@ -70,49 +74,60 @@ void Application::PollEvents() {
 }
 
 void Application::Update(float deltaTime) {
-    (void)deltaTime;
-
-    // ===== ТЕСТ СИСТЕМЫ ВВОДА =====
-
     // Закрытие по Esc
     if (m_input.IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
-        std::cout << "Esc pressed — closing." << std::endl;
         m_running = false;
     }
 
-    // Space — меняем заголовок окна (раз консоль не видна в WIN32-сборке)
-    if (m_input.IsKeyPressed(SDL_SCANCODE_SPACE)) {
-        static int counter = 0;
-        ++counter;
-        std::string title = "Space pressed: " + std::to_string(counter) + " times";
-        SDL_SetWindowTitle(m_window, title.c_str());
+    // ===== Движение игрока =====
+    // Скорость умножается на deltaTime — независимо от FPS
+    float dx = 0.0f;
+    float dy = 0.0f;
+
+    if (m_input.IsKeyDown(SDL_SCANCODE_W) || m_input.IsKeyDown(SDL_SCANCODE_UP))
+        dy -= 1.0f;
+    if (m_input.IsKeyDown(SDL_SCANCODE_S) || m_input.IsKeyDown(SDL_SCANCODE_DOWN))
+        dy += 1.0f;
+    if (m_input.IsKeyDown(SDL_SCANCODE_A) || m_input.IsKeyDown(SDL_SCANCODE_LEFT))
+        dx -= 1.0f;
+    if (m_input.IsKeyDown(SDL_SCANCODE_D) || m_input.IsKeyDown(SDL_SCANCODE_RIGHT))
+        dx += 1.0f;
+
+    // Нормализация диагонали — чтобы по диагонали не двигаться быстрее
+    if (dx != 0.0f && dy != 0.0f) {
+        const float inv = 1.0f / 1.41421356f;  // 1 / sqrt(2)
+        dx *= inv;
+        dy *= inv;
     }
 
-    // Проверка IsKeyDown — двигаем цвет фона, пока зажата стрелка вправо
-    if (m_input.IsKeyDown(SDL_SCANCODE_RIGHT)) {
-        // Просто демонстрация: меняем цвет очистки экрана
-        // (реально это будет в Render, но для теста — здесь)
+    m_playerX += dx * PLAYER_SPEED * deltaTime;
+    m_playerY += dy * PLAYER_SPEED * deltaTime;
+
+    // Обновляем заголовок окна — показываем позицию (отладка)
+    static float timer = 0.0f;
+    timer += deltaTime;
+    if (timer >= 0.1f) {   // не чаще 10 раз в секунду
+        timer = 0.0f;
+        std::string title = "Player: " +
+            std::to_string((int)m_playerX) + ", " +
+            std::to_string((int)m_playerY);
+        SDL_SetWindowTitle(m_window, title.c_str());
     }
 }
 
 void Application::Render() {
-    // Меняем цвет фона в зависимости от зажатой клавиши — визуальная проверка
-    if (m_input.IsKeyDown(SDL_SCANCODE_RIGHT)) {
-        SDL_SetRenderDrawColor(m_renderer, 60, 30, 30, 255);   // красноватый
-    } else if (m_input.IsKeyDown(SDL_SCANCODE_LEFT)) {
-        SDL_SetRenderDrawColor(m_renderer, 30, 30, 60, 255);   // синеватый
-    } else {
-        SDL_SetRenderDrawColor(m_renderer, 30, 30, 30, 255);   // тёмно-серый
-    }
+    // Очистка фона
+    m_rendererWrap.Clear(30, 30, 30);
 
-    SDL_RenderClear(m_renderer);
+    // Рисуем игрока
+    m_rendererWrap.DrawTexture(m_playerTexture, m_playerX, m_playerY);
 
-    // TODO: отрисовка спрайтов
-
-    SDL_RenderPresent(m_renderer);
+    // Показываем кадр
+    m_rendererWrap.Present();
 }
 
 void Application::Shutdown() {
+    // m_playerTexture освободится автоматически в своём деструкторе
     if (m_renderer) {
         SDL_DestroyRenderer(m_renderer);
         m_renderer = nullptr;

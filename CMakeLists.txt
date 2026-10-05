@@ -7,17 +7,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
-# SDL как подпроект
+# Подпроекты SDL
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)
 
-# Все исходники движка
 add_executable(2DEngine WIN32
     src/main.cpp
     src/core/Application.cpp
     src/core/Input.cpp
+    src/graphics/Texture.cpp
+    src/graphics/Renderer.cpp
 )
 
-# Чтобы #include "core/Application.h" работал
 target_include_directories(2DEngine PRIVATE src)
 
-target_link_libraries(2DEngine PRIVATE SDL3::SDL3)
+target_link_libraries(2DEngine PRIVATE
+    SDL3::SDL3
+    SDL3_image::SDL3_image
+)
