@@ -14,6 +14,7 @@ add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_executable(2DEngine WIN32
     src/main.cpp
     src/core/Application.cpp
+    src/core/Input.cpp
 )
 
 # Чтобы #include "core/Application.h" работал

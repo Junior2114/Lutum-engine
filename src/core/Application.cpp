@@ -1,10 +1,9 @@
 #include "core/Application.h"
 
 #include <iostream>
+#include <string>
 
-Application::Application() {
-    // Всё в Init
-}
+Application::Application() {}
 
 Application::~Application() {
     Shutdown();
@@ -23,9 +22,9 @@ bool Application::Init(const char* title, int width, int height) {
         return false;
     }
 
-    m_frequency    = (double)SDL_GetPerformanceFrequency();
-    m_lastCounter  = SDL_GetPerformanceCounter();
-    m_running      = true;
+    m_frequency   = (double)SDL_GetPerformanceFrequency();
+    m_lastCounter = SDL_GetPerformanceCounter();
+    m_running     = true;
 
     std::cout << "Engine initialized: " << title
               << " (" << width << "x" << height << ")" << std::endl;
@@ -34,18 +33,21 @@ bool Application::Init(const char* title, int width, int height) {
 
 void Application::Run() {
     while (m_running) {
-        // 1. Считаем delta time
+        // 1. Delta time
         Uint64 now = SDL_GetPerformanceCounter();
         float dt = (float)((now - m_lastCounter) / m_frequency);
         m_lastCounter = now;
 
-        // 2. Обрабатываем события
+        // 2. Начало кадра — фиксируем предыдущее состояние ввода
+        m_input.BeginFrame();
+
+        // 3. События
         PollEvents();
 
-        // 3. Обновляем логику
+        // 4. Логика
         Update(dt);
 
-        // 4. Рисуем кадр
+        // 5. Рендер
         Render();
     }
 }
@@ -53,12 +55,14 @@ void Application::Run() {
 void Application::PollEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        // Сначала отдаём событие в Input — он обновит своё состояние
+        m_input.ProcessEvent(event);
+
+        // Потом обрабатываем системные события
         switch (event.type) {
             case SDL_EVENT_QUIT:
                 m_running = false;
                 break;
-
-            // Сюда позже добавим обработку клавиш и мыши
             default:
                 break;
         }
@@ -66,18 +70,45 @@ void Application::PollEvents() {
 }
 
 void Application::Update(float deltaTime) {
-    // Пока пусто. Здесь будут обновляться сущности, физика, анимации.
-    (void)deltaTime; // чтобы компилятор не ругался на неиспользуемый параметр
+    (void)deltaTime;
+
+    // ===== ТЕСТ СИСТЕМЫ ВВОДА =====
+
+    // Закрытие по Esc
+    if (m_input.IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
+        std::cout << "Esc pressed — closing." << std::endl;
+        m_running = false;
+    }
+
+    // Space — меняем заголовок окна (раз консоль не видна в WIN32-сборке)
+    if (m_input.IsKeyPressed(SDL_SCANCODE_SPACE)) {
+        static int counter = 0;
+        ++counter;
+        std::string title = "Space pressed: " + std::to_string(counter) + " times";
+        SDL_SetWindowTitle(m_window, title.c_str());
+    }
+
+    // Проверка IsKeyDown — двигаем цвет фона, пока зажата стрелка вправо
+    if (m_input.IsKeyDown(SDL_SCANCODE_RIGHT)) {
+        // Просто демонстрация: меняем цвет очистки экрана
+        // (реально это будет в Render, но для теста — здесь)
+    }
 }
 
 void Application::Render() {
-    // Очистка экрана тёмно-серым
-    SDL_SetRenderDrawColor(m_renderer, 30, 30, 30, 255);
+    // Меняем цвет фона в зависимости от зажатой клавиши — визуальная проверка
+    if (m_input.IsKeyDown(SDL_SCANCODE_RIGHT)) {
+        SDL_SetRenderDrawColor(m_renderer, 60, 30, 30, 255);   // красноватый
+    } else if (m_input.IsKeyDown(SDL_SCANCODE_LEFT)) {
+        SDL_SetRenderDrawColor(m_renderer, 30, 30, 60, 255);   // синеватый
+    } else {
+        SDL_SetRenderDrawColor(m_renderer, 30, 30, 30, 255);   // тёмно-серый
+    }
+
     SDL_RenderClear(m_renderer);
 
-    // TODO: здесь будет отрисовка спрайтов, текста и т.д.
+    // TODO: отрисовка спрайтов
 
-    // Показать кадр
     SDL_RenderPresent(m_renderer);
 }
 
