@@ -4,12 +4,14 @@
 #include <iostream>
 #include <utility>
 
+namespace m2d {
+
 Texture::~Texture() {
     Destroy();
 }
 
 bool Texture::LoadFromFile(SDL_Renderer* renderer, const std::string& path) {
-    Destroy();  // на случай повторной загрузки в этот же объект
+    Destroy();
 
     SDL_Texture* loaded = IMG_LoadTexture(renderer, path.c_str());
     if (!loaded) {
@@ -18,7 +20,6 @@ bool Texture::LoadFromFile(SDL_Renderer* renderer, const std::string& path) {
         return false;
     }
 
-    // Получаем размеры текстуры
     float w = 0.0f, h = 0.0f;
     if (!SDL_GetTextureSize(loaded, &w, &h)) {
         std::cerr << "Failed to get texture size: " << SDL_GetError() << std::endl;
@@ -58,8 +59,6 @@ void Texture::Destroy() {
     }
 }
 
-// ===== Move-семантика =====
-
 Texture::Texture(Texture&& other) noexcept
     : m_texture(other.m_texture)
     , m_width(other.m_width)
@@ -72,7 +71,7 @@ Texture::Texture(Texture&& other) noexcept
 
 Texture& Texture::operator=(Texture&& other) noexcept {
     if (this != &other) {
-        Destroy();   // освобождаем свой текущий ресурс
+        Destroy();
 
         m_texture = other.m_texture;
         m_width   = other.m_width;
@@ -84,3 +83,5 @@ Texture& Texture::operator=(Texture&& other) noexcept {
     }
     return *this;
 }
+
+} // namespace m2d

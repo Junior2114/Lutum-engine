@@ -1,13 +1,14 @@
 #include "graphics/Animator.h"
 #include <iostream>
+#include <utility>
+
+namespace m2d {
 
 void Animator::Add(const std::string& name, Animation anim) {
     m_animations[name] = std::move(anim);
 }
 
 void Animator::Play(const std::string& name, bool reset) {
-    // Если просим ту же анимацию, и reset=false — ничего не делаем.
-    // Это важно: вызывая Play("walk_down") каждый кадр, мы не сбрасываем её.
     if (name == m_currentName && !reset) {
         return;
     }
@@ -37,7 +38,6 @@ void Animator::Update(float dt) {
 
     m_elapsed += dt;
 
-    // Может пройти несколько frameTime за один кадр — используем while
     while (m_elapsed >= frameTime) {
         m_elapsed -= frameTime;
 
@@ -46,7 +46,6 @@ void Animator::Update(float dt) {
             if (anim.IsLooping()) {
                 m_currentFrame = 0;
             } else {
-                // Не зациклено — застреваем на последнем кадре
                 m_currentFrame = frameCount - 1;
                 m_elapsed = 0.0f;
                 break;
@@ -69,3 +68,5 @@ bool Animator::GetCurrentFrame(SDL_FRect& outRect) const {
     outRect = anim.GetFrame(m_currentFrame);
     return true;
 }
+
+} // namespace m2d

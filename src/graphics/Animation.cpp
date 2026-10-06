@@ -1,5 +1,7 @@
 #include "graphics/Animation.h"
 
+namespace m2d {
+
 void Animation::AddFrame(const SDL_FRect& frame) {
     m_frames.push_back(frame);
 }
@@ -9,8 +11,8 @@ void Animation::AddFramesFromRow(float frameW, float frameH,
     for (int i = 0; i < colCount; ++i) {
         int col = colStart + i;
         SDL_FRect rect{
-            col * frameW,      // x в спрайт-листе
-            row * frameH,      // y в спрайт-листе
+            col * frameW,
+            row * frameH,
             frameW,
             frameH
         };
@@ -19,9 +21,10 @@ void Animation::AddFramesFromRow(float frameW, float frameH,
 }
 
 const SDL_FRect& Animation::GetFrame(size_t index) const {
-    // Безопасный доступ: если индекс вышел за пределы — вернём последний кадр
     if (index >= m_frames.size()) {
         return m_frames.back();
     }
     return m_frames[index];
 }
+
+} // namespace m2d

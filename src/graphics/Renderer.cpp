@@ -1,5 +1,7 @@
 #include "graphics/Renderer.h"
 
+namespace m2d {
+
 void Renderer::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
     SDL_SetRenderDrawColor(m_renderer, r, g, b, a);
     SDL_RenderClear(m_renderer);
@@ -48,3 +50,5 @@ void Renderer::DrawRect(const SDL_FRect& rect,
 void Renderer::Present() {
     SDL_RenderPresent(m_renderer);
 }
+
+} // namespace m2d

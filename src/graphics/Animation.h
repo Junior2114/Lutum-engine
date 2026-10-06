@@ -4,17 +4,14 @@
 #include <vector>
 #include <string>
 
-// Данные ОДНОЙ анимации: набор кадров + скорость + зацикленность.
-// Сам по себе не обновляется — это делает Animator.
+namespace m2d {
+
 class Animation {
 public:
     Animation() = default;
 
-    // Добавить кадр — прямоугольник в спрайт-листе
     void AddFrame(const SDL_FRect& frame);
 
-    // Нарезать спрайт-лист в сетку и добавить выбранные кадры
-    // row, colStart..colEnd — с какого по какой столбец в строке row
     void AddFramesFromRow(float frameW, float frameH,
                           int row, int colStart, int colCount);
 
@@ -31,6 +28,8 @@ public:
 
 private:
     std::vector<SDL_FRect> m_frames;
-    float m_frameTime = 0.1f;   // секунд на кадр по умолчанию
+    float m_frameTime = 0.1f;
     bool  m_looping   = true;
 };
+
+} // namespace m2d

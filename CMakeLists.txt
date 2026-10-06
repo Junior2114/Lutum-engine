@@ -22,6 +22,7 @@ add_executable(2DEngine WIN32
     src/graphics/Renderer.cpp
     src/graphics/Animation.cpp
     src/graphics/Animator.cpp
+    src/game/Player.cpp
 )
 target_include_directories(2DEngine PRIVATE src)
 
