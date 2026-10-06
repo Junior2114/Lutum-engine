@@ -28,59 +28,62 @@ void PlayScene::OnEnter(m2d::Engine& engine) {
     auto& ui     = engine.GetUI();
     auto* uiFont = ui.GetFont();
 
-    constexpr float PANEL_W = 220.0f;
+	constexpr float PANEL_W = 220.0f;
+	const float panelH = (float)engine.GetHeight();
 
-    auto* panel = ui.Add<m2d::UIPanel>();
-    panel->SetPosition(0.0f, 0.0f);
-    panel->SetSize(PANEL_W, (float)engine.GetHeight());
-    panel->SetBackgroundColor(20, 20, 25, 240);
-    panel->SetBorder(true, 60, 60, 80);
+	auto* panel = ui.Add<m2d::UIPanel>();
+	panel->SetPosition(0.0f, 0.0f);
+	panel->SetSize(PANEL_W, panelH);
+	panel->SetBackgroundColor(20, 20, 25, 240);
+	panel->SetBorder(true, 60, 60, 80);
 
-    auto* title = panel->AddChild<m2d::UILabel>();
-    title->SetPosition(16.0f, 16.0f);
-    title->SetFont(uiFont);
-    title->SetText("Tools");
-    title->SetColor(180, 180, 220);
+	// Заголовок
+	auto* title = panel->AddChild<m2d::UILabel>();
+	title->SetPosition(16.0f, 16.0f);
+	title->SetFont(uiFont);
+	title->SetText("Tools");
+	title->SetColor(180, 180, 220);
 
-    struct ButtonDef {
-        const char* label;
-        m2d::Shape::Type type;
-    };
+	struct ButtonDef {
+		const char* label;
+		m2d::Shape::Type type;
+	};
 
-    ButtonDef defs[] = {
-        { "Rectangle", m2d::Shape::Type::Rectangle },
-        { "Circle",    m2d::Shape::Type::Circle    },
-        { "Triangle",  m2d::Shape::Type::Triangle  },
-    };
+	ButtonDef defs[] = {
+		{ "Rectangle", m2d::Shape::Type::Rectangle },
+		{ "Circle",    m2d::Shape::Type::Circle    },
+		{ "Triangle",  m2d::Shape::Type::Triangle  },
+	};
 
-    float y = 60.0f;
-    for (const auto& def : defs) {
-        auto* btn = panel->AddChild<m2d::UIButton>();
-        btn->SetPosition(16.0f, y);
-        btn->SetSize(PANEL_W - 32.0f, 36.0f);
-        btn->SetFont(uiFont);
-        btn->SetText(def.label);
+	float y = 60.0f;
+	for (const auto& def : defs) {
+		auto* btn = panel->AddChild<m2d::UIButton>();
+		btn->SetPosition(16.0f, y);
+		btn->SetSize(PANEL_W - 32.0f, 36.0f);
+		btn->SetFont(uiFont);
+		btn->SetText(def.label);
 
-        const m2d::Shape::Type type = def.type;
-        btn->SetOnClick([this, type]() {
-            AddRandomShape(type);
-        });
+		const m2d::Shape::Type type = def.type;
+		btn->SetOnClick([this, type]() {
+			M2D_INFO("Button clicked, adding shape");
+			AddRandomShape(type);
+		});
 
-        y += 46.0f;
-    }
+		y += 46.0f;
+	}
 
-    y += 20.0f;
-    auto* clearBtn = panel->AddChild<m2d::UIButton>();
-    clearBtn->SetPosition(16.0f, y);
-    clearBtn->SetSize(PANEL_W - 32.0f, 36.0f);
-    clearBtn->SetFont(uiFont);
-    clearBtn->SetText("Clear");
-    clearBtn->SetColors(120, 40, 40, 160, 60, 60, 90, 30, 30);
-    clearBtn->SetOnClick([this]() {
-        ClearShapes();
-    });
-
-    M2D_INFO("PlayScene entered");
+	// Clear — ниже, но всё ещё в панели
+	y += 20.0f;
+	auto* clearBtn = panel->AddChild<m2d::UIButton>();
+	clearBtn->SetPosition(16.0f, y);
+	clearBtn->SetSize(PANEL_W - 32.0f, 36.0f);
+	clearBtn->SetFont(uiFont);
+	clearBtn->SetText("Clear");
+	clearBtn->SetColors(120, 40, 40, 160, 60, 60, 90, 30, 30);
+	clearBtn->SetOnClick([this]() {
+		M2D_INFO("Clear button clicked");
+		ClearShapes();
+	});
 }
 
 void PlayScene::OnExit() {

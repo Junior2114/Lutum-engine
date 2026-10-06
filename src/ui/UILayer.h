@@ -32,18 +32,27 @@ public:
     bool IsVisible() const  { return m_visible; }
     void ToggleVisible()    { m_visible = !m_visible; }
 
-    // Проверка: попадает ли точка в UI.
-    // Игра использует это, чтобы не реагировать на клик по UI.
+    // Проверка: попадает ли точка в UI. Используется игрой,
+    // чтобы не обрабатывать клики, попавшие в UI.
     bool IsPointOverUI(float x, float y) const;
 
 private:
-    // Рекурсивный обход элементов — для панелей с детьми.
-    void UpdateElement(UIElement* element, const Input& input,
-                       float mx, float my, bool mouseDown);
+    // Рекурсивный обход для обработки кликов и hover.
+    // mouseDown — левая кнопка зажата СЕЙЧАС.
+    // mouseReleased — левая кнопка была зажата и отпущена в ЭТОМ кадре.
+    void UpdateElement(UIElement* element,
+                       float mx, float my,
+                       bool mouseDown, bool mouseReleased);
+
+    // Рекурсивная проверка попадания (для панелей с детьми).
+    bool IsPointOverElement(const UIElement* element, float x, float y) const;
 
     std::vector<std::unique_ptr<UIElement>> m_elements;
     Font* m_font = nullptr;
     bool  m_visible = true;
+
+    // Состояние мыши в ПРОШЛОМ кадре. Обновляется один раз за кадр.
+    bool m_mouseWasDownLastFrame = false;
 };
 
 } // namespace m2d

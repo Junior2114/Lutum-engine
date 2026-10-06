@@ -20,21 +20,17 @@ public:
 
     void Render(Renderer& renderer) const;
 
-    // ===== Попадание точки =====
     bool ContainsPoint(float px, float py) const {
         return px >= m_x && px <= m_x + m_w &&
                py >= m_y && py <= m_y + m_h;
     }
 
-    // ===== Позиция =====
     void MoveTo(float x, float y) { m_x = x; m_y = y; }
     void MoveBy(float dx, float dy) { m_x += dx; m_y += dy; }
 
-    // ===== Выделение =====
     void SetSelected(bool s) { m_selected = s; }
     bool IsSelected() const  { return m_selected; }
 
-    // ===== Геттеры =====
     Type GetType() const { return m_type; }
     float GetX() const { return m_x; }
     float GetY() const { return m_y; }
