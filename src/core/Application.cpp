@@ -27,8 +27,6 @@ bool Application::Init(const char* title, int width, int height) {
     }
 
     // ===== Окно и рендерер =====
-    // Флаг SDL_RENDERER_PRESENTVSYNC в SDL3 устарел — создаём без флагов,
-    // а VSync включаем отдельным вызовом SDL_SetRenderVSync.
     if (!SDL_CreateWindowAndRenderer(title, width, height, 0,
                                      &m_window, &m_renderer)) {
         std::cerr << "Failed to create window/renderer: "
@@ -39,21 +37,18 @@ bool Application::Init(const char* title, int width, int height) {
     }
 
     // ===== VSync =====
-    // 1 = синхронизация с каждым обновлением монитора (обычный VSync)
     if (!SDL_SetRenderVSync(m_renderer, 1)) {
         std::cerr << "Warning: VSync not supported: "
                   << SDL_GetError() << std::endl;
-        // Не критично — продолжаем без VSync
     }
 
     // ===== Обёртка над рендерером =====
     m_rendererWrap = Renderer(m_renderer);
 
-    // ===== Спрайт-лист игрока =====
+    // ===== Спрайт-лист =====
     if (!m_playerSheet.LoadFromFile(m_renderer,
                                     "assets/textures/player_sheet.png")) {
-        std::cerr << "Warning: player_sheet.png not loaded. "
-                  << "Place it in assets/textures/" << std::endl;
+        std::cerr << "Warning: player_sheet.png not loaded." << std::endl;
     } else {
         std::cout << "Loaded player_sheet.png ("
                   << m_playerSheet.GetWidth() << "x"
@@ -61,6 +56,7 @@ bool Application::Init(const char* title, int width, int height) {
     }
 
     // ===== Шрифт =====
+    std::cout << "Trying to load font: assets/fonts/default.ttf" << std::endl;
     if (!m_font.LoadFromFile("assets/fonts/default.ttf", 24.0f)) {
         std::cerr << "Warning: default.ttf not loaded. "
                   << "Place it in assets/fonts/" << std::endl;
@@ -83,12 +79,10 @@ bool Application::Init(const char* title, int width, int height) {
 
 void Application::Run() {
     while (m_running) {
-        // ===== Delta time =====
         Uint64 now = SDL_GetPerformanceCounter();
         float dt = (float)((now - m_lastCounter) / m_frequency);
         m_lastCounter = now;
 
-        // Защита от экстремальных значений dt
         if (dt < 0.0f) dt = 0.0f;
         if (dt > 0.1f) dt = 0.1f;
 
@@ -103,7 +97,6 @@ void Application::PollEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         m_input.ProcessEvent(event);
-
         if (event.type == SDL_EVENT_QUIT) {
             m_running = false;
         }
@@ -111,25 +104,24 @@ void Application::PollEvents() {
 }
 
 void Application::Update(float deltaTime) {
-    // ===== FPS-счётчик =====
+    // ===== FPS =====
     m_fpsTimer   += deltaTime;
     m_frameCount += 1;
-
     if (m_fpsTimer >= 1.0f) {
         m_fps        = m_frameCount;
         m_frameCount = 0;
-        m_fpsTimer  -= 1.0f;   // сохраняем остаток, не сбрасываем в 0
+        m_fpsTimer  -= 1.0f;
     }
 
-    // ===== Выход по Esc =====
+    // ===== Esc =====
     if (m_input.IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
         m_running = false;
     }
 
-    // ===== Логика игрока =====
+    // ===== Игрок =====
     m_player.Update(m_input, deltaTime);
 
-    // ===== Заголовок окна — отладка =====
+    // ===== Заголовок =====
     static float titleTimer = 0.0f;
     titleTimer += deltaTime;
     if (titleTimer >= 0.1f) {
@@ -142,24 +134,23 @@ void Application::Update(float deltaTime) {
 }
 
 void Application::Render() {
-    // ===== Очистка фона =====
+    // ===== Фон =====
     m_rendererWrap.Clear(30, 30, 30);
 
     // ===== Игрок =====
     m_player.Render(m_rendererWrap);
 
-    // ===== FPS-счётчик в левом верхнем углу =====
+    // ===== FPS-счётчик =====
     std::string fpsText = "FPS: " + std::to_string(m_fps);
     m_rendererWrap.DrawText(m_font, fpsText, 10.0f, 10.0f,
-                            255, 255, 100, 255);   // жёлтый
+                            255, 255, 100, 255);
 
     // ===== Показ кадра =====
     m_rendererWrap.Present();
 }
 
 void Application::Shutdown() {
-    // m_playerSheet и m_font освободятся в своих деструкторах,
-    // но можно вызвать Destroy() явно — не обязательно.
+    m_font.Destroy();
 
     if (m_renderer) {
         SDL_DestroyRenderer(m_renderer);
@@ -169,11 +160,6 @@ void Application::Shutdown() {
         SDL_DestroyWindow(m_window);
         m_window = nullptr;
     }
-
-    // TTF_Quit должен быть вызван ПОСЛЕ освобождения всех шрифтов,
-    // но у нас Font — член Application, и его деструктор вызовется
-    // уже после Shutdown(). Поэтому явно освобождаем шрифт здесь.
-    m_font.Destroy();
 
     TTF_Quit();
     SDL_Quit();

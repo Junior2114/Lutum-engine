@@ -12,28 +12,18 @@ void Renderer::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
 
 void Renderer::DrawTexture(const Texture& texture, float x, float y) {
     if (!texture.IsValid()) return;
-
-    SDL_FRect dst{
-        x,
-        y,
-        (float)texture.GetWidth(),
-        (float)texture.GetHeight()
-    };
-
+    SDL_FRect dst{ x, y,
+                   (float)texture.GetWidth(),
+                   (float)texture.GetHeight() };
     SDL_RenderTexture(m_renderer, texture.Get(), nullptr, &dst);
 }
 
 void Renderer::DrawTextureEx(const Texture& texture, float x, float y,
                              float scale) {
     if (!texture.IsValid()) return;
-
-    SDL_FRect dst{
-        x,
-        y,
-        (float)texture.GetWidth()  * scale,
-        (float)texture.GetHeight() * scale
-    };
-
+    SDL_FRect dst{ x, y,
+                   (float)texture.GetWidth()  * scale,
+                   (float)texture.GetHeight() * scale };
     SDL_RenderTexture(m_renderer, texture.Get(), nullptr, &dst);
 }
 
@@ -53,7 +43,9 @@ void Renderer::DrawRect(const SDL_FRect& rect,
 float Renderer::DrawText(const Font& font, const std::string& text,
                          float x, float y,
                          Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
-    if (!font.IsValid() || text.empty()) return 0.0f;
+    // Защита: если шрифт не загружен — ничего не рисуем
+    if (!font.IsValid()) return 0.0f;
+    if (text.empty())    return 0.0f;
 
     SDL_Color color{ r, g, b, a };
 
