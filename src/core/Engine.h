@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include "core/Input.h"
 #include "core/Log.h"
+#include "ui/UILayer.h"            // <-- новое
 #include "graphics/Renderer.h"
 #include "graphics/DebugOverlay.h"
 #include "graphics/ResourceManager.h"
@@ -20,11 +21,11 @@ public:
     void Run(Game& game);
     void Shutdown();
 
-    // ===== Доступ к подсистемам =====
     Input&           GetInput()         { return m_input; }
     Renderer&        GetRenderer()      { return m_rendererWrap; }
     ResourceManager& GetResources()     { return m_resources; }
     DebugOverlay&    GetDebugOverlay()  { return m_debugOverlay; }
+    UILayer&         GetUI()            { return m_ui; }             // <-- новое
 
     SDL_Window*   GetWindow()      { return m_window; }
     SDL_Renderer* GetSDLRenderer() { return m_renderer; }
@@ -55,6 +56,7 @@ private:
     Input           m_input;
     Renderer        m_rendererWrap;
     ResourceManager m_resources;
+    UILayer         m_ui;                 // <-- новое
     DebugOverlay    m_debugOverlay;
     bool            m_showDebugOverlay = true;
 };

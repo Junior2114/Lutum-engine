@@ -2,6 +2,9 @@
 
 #include "core/Scene.h"
 #include "core/Engine.h"
+#include "ui/UIPanel.h"
+#include "ui/UILabel.h"
+#include "ui/UIButton.h"
 #include "graphics/Texture.h"
 #include "graphics/Font.h"
 #include "game/Player.h"
@@ -10,7 +13,6 @@ namespace mygame {
 
 class MyGame;
 
-// Игровая сцена: игрок, обновление по вводу, рендер.
 class PlayScene : public m2d::Scene {
 public:
     explicit PlayScene(MyGame* game) : m_game(game) {}
@@ -25,7 +27,6 @@ private:
     m2d::Engine* m_engine = nullptr;
     m2d::Input*  m_input  = nullptr;
 
-    // Не владеющие указатели — ресурсы в ResourceManager
     m2d::Texture* m_playerSheet = nullptr;
     m2d::Font*    m_font        = nullptr;
 
