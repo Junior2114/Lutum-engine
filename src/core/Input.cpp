@@ -10,8 +10,14 @@ Input::Input() {
 }
 
 void Input::BeginFrame() {
+    // Копируем состояние прошлого кадра
     m_previousKeys  = m_currentKeys;
     m_previousMouse = m_currentMouse;
+
+    // Сбрасываем накопленный текстовый ввод
+    m_textInput.clear();
+    m_enterPressed     = false;
+    m_backspacePressed = false;
 }
 
 void Input::ProcessEvent(const SDL_Event& event) {
@@ -19,6 +25,13 @@ void Input::ProcessEvent(const SDL_Event& event) {
         case SDL_EVENT_KEY_DOWN: {
             if (event.key.scancode < KEY_COUNT) {
                 m_currentKeys[event.key.scancode] = true;
+            }
+            // Enter и Backspace — отдельные флаги для текстовых полей
+            if (event.key.scancode == SDL_SCANCODE_RETURN) {
+                m_enterPressed = true;
+            }
+            if (event.key.scancode == SDL_SCANCODE_BACKSPACE) {
+                m_backspacePressed = true;
             }
             break;
         }
@@ -28,6 +41,14 @@ void Input::ProcessEvent(const SDL_Event& event) {
             }
             break;
         }
+
+        case SDL_EVENT_TEXT_INPUT: {
+            // SDL присылает UTF-8 текст с учётом раскладки.
+            // Для наших целей (цифры, точка) достаточно.
+            m_textInput += event.text.text;
+            break;
+        }
+
         case SDL_EVENT_MOUSE_MOTION: {
             m_mouseX = event.motion.x;
             m_mouseY = event.motion.y;
@@ -45,10 +66,13 @@ void Input::ProcessEvent(const SDL_Event& event) {
             }
             break;
         }
+
         default:
             break;
     }
 }
+
+// ===== Клавиатура =====
 
 bool Input::IsKeyDown(SDL_Scancode key) const {
     if (key < 0 || key >= KEY_COUNT) return false;
@@ -64,6 +88,8 @@ bool Input::IsKeyReleased(SDL_Scancode key) const {
     if (key < 0 || key >= KEY_COUNT) return false;
     return !m_currentKeys[key] && m_previousKeys[key];
 }
+
+// ===== Мышь =====
 
 bool Input::IsMouseButtonDown(Uint8 button) const {
     if (button >= MOUSE_BUTTONS) return false;

@@ -5,6 +5,8 @@
 #include <random>
 #include <algorithm>
 #include <string>
+#include <cmath>
+#include <cstdio>
 
 namespace mygame {
 
@@ -14,7 +16,8 @@ static float RandomFloat(float min, float max) {
     return dist(gen);
 }
 
-// ===== OnEnter =====
+static constexpr float DRAG_THRESHOLD = 3.0f;
+
 void PlayScene::OnEnter(m2d::Engine& engine) {
     m_engine = &engine;
     m_input  = &engine.GetInput();
@@ -65,12 +68,8 @@ void PlayScene::OnEnter(m2d::Engine& engine) {
         btn->SetSize(LEFT_W - 32.0f, 36.0f);
         btn->SetFont(uiFont);
         btn->SetText(def.label);
-
         const m2d::Shape::Type type = def.type;
-        btn->SetOnClick([this, type]() {
-            AddRandomShape(type);
-        });
-
+        btn->SetOnClick([this, type]() { AddRandomShape(type); });
         y += 46.0f;
     }
 
@@ -81,58 +80,138 @@ void PlayScene::OnEnter(m2d::Engine& engine) {
     clearBtn->SetFont(uiFont);
     clearBtn->SetText("Clear");
     clearBtn->SetColors(120, 40, 40, 160, 60, 60, 90, 30, 30);
-    clearBtn->SetOnClick([this]() {
-        ClearShapes();
-    });
+    clearBtn->SetOnClick([this]() { ClearShapes(); });
 
-    // ===== Правая панель — ИНСПЕКТОР =====
-    constexpr float RIGHT_W = 260.0f;
+    // ===== Правая панель — Inspector =====
+    constexpr float RIGHT_W = 280.0f;
 
     m_inspectorPanel = ui.Add<m2d::UIPanel>();
     m_inspectorPanel->SetPosition((float)W - RIGHT_W, 0.0f);
     m_inspectorPanel->SetSize(RIGHT_W, (float)H);
-    m_inspectorPanel->SetBackgroundColor(20, 20, 25, 240);
-    m_inspectorPanel->SetBorder(true, 60, 60, 80);
-    m_inspectorPanel->SetVisible(false);   // пока ничего не выделено
+    m_inspectorPanel->SetBackgroundColor(22, 22, 28, 245);
+    m_inspectorPanel->SetBorder(true, 55, 55, 75);
+    m_inspectorPanel->SetVisible(false);
 
-    auto* inspTitle = m_inspectorPanel->AddChild<m2d::UILabel>();
-    inspTitle->SetPosition(16.0f, 16.0f);
-    inspTitle->SetFont(uiFont);
-    inspTitle->SetText("Inspector");
-    inspTitle->SetColor(180, 180, 220);
+    // Header
+    auto* header = m_inspectorPanel->AddChild<m2d::UILabel>();
+    header->SetPosition(16.0f, 14.0f);
+    header->SetFont(uiFont);
+    header->SetText("INSPECTOR");
+    header->SetColor(140, 140, 180);
 
-    // Type: Rectangle
+    auto* sep1 = m_inspectorPanel->AddChild<m2d::UISeparator>();
+    sep1->SetPosition(16.0f, 44.0f);
+    sep1->SetSize(RIGHT_W - 32.0f, 4.0f);
+    sep1->SetColor(55, 55, 75);
+
+    // OBJECT
+    auto* secObj = m_inspectorPanel->AddChild<m2d::UILabel>();
+    secObj->SetPosition(16.0f, 60.0f);
+    secObj->SetFont(uiFont);
+    secObj->SetText("OBJECT");
+    secObj->SetColor(100, 180, 255);
+
     m_inspectorTypeLabel = m_inspectorPanel->AddChild<m2d::UILabel>();
-    m_inspectorTypeLabel->SetPosition(16.0f, 60.0f);
+    m_inspectorTypeLabel->SetPosition(20.0f, 90.0f);
     m_inspectorTypeLabel->SetFont(uiFont);
     m_inspectorTypeLabel->SetText("Type: -");
     m_inspectorTypeLabel->SetColor(220, 220, 220);
 
-    // Scale: 1.00
-    m_inspectorScaleLabel = m_inspectorPanel->AddChild<m2d::UILabel>();
-    m_inspectorScaleLabel->SetPosition(16.0f, 110.0f);
-    m_inspectorScaleLabel->SetFont(uiFont);
-    m_inspectorScaleLabel->SetText("Scale: 1.00");
-    m_inspectorScaleLabel->SetColor(220, 220, 220);
+    auto* sep2 = m_inspectorPanel->AddChild<m2d::UISeparator>();
+    sep2->SetPosition(16.0f, 122.0f);
+    sep2->SetSize(RIGHT_W - 32.0f, 4.0f);
+    sep2->SetColor(55, 55, 75);
 
-    // Слайдер Scale
-    m_inspectorScaleSlider = m_inspectorPanel->AddChild<m2d::UISlider>();
-    m_inspectorScaleSlider->SetPosition(16.0f, 145.0f);
-    m_inspectorScaleSlider->SetSize(RIGHT_W - 32.0f, 20.0f);
-    m_inspectorScaleSlider->SetRange(0.2f, 3.0f);
-    m_inspectorScaleSlider->SetValue(1.0f);
-    m_inspectorScaleSlider->SetOnChange([this](float value) {
+    // TRANSFORM
+    auto* secTf = m_inspectorPanel->AddChild<m2d::UILabel>();
+    secTf->SetPosition(16.0f, 140.0f);
+    secTf->SetFont(uiFont);
+    secTf->SetText("TRANSFORM");
+    secTf->SetColor(100, 180, 255);
+
+    // ===== Scale X =====
+    auto* sxLabel = m_inspectorPanel->AddChild<m2d::UILabel>();
+    sxLabel->SetPosition(20.0f, 170.0f);
+    sxLabel->SetFont(uiFont);
+    sxLabel->SetText("Scale X");
+    sxLabel->SetColor(200, 200, 200);
+
+    m_scaleXSlider = m_inspectorPanel->AddChild<m2d::UISlider>();
+    m_scaleXSlider->SetPosition(20.0f, 200.0f);
+    m_scaleXSlider->SetSize(RIGHT_W - 130.0f, 20.0f);
+    m_scaleXSlider->SetRange(0.2f, 3.0f);
+    m_scaleXSlider->SetValue(1.0f);
+    m_scaleXSlider->SetOnChange([this](float value) {
         auto* shape = FindSelectedShape();
         if (shape) {
-            shape->SetScale(value);
-            // Обновляем текст
+            shape->SetScaleX(value);
             char buf[64];
-            snprintf(buf, sizeof(buf), "Scale: %.2f", value);
-            m_inspectorScaleLabel->SetText(buf);
+            std::snprintf(buf, sizeof(buf), "%.2f", value);
+            m_scaleXValue->SetText(buf);
         }
     });
 
-    M2D_INFO("PlayScene entered (with inspector)");
+    m_scaleXValue = m_inspectorPanel->AddChild<m2d::UITextInput>();
+    m_scaleXValue->SetPosition(RIGHT_W - 95.0f, 200.0f);
+    m_scaleXValue->SetSize(70.0f, 20.0f);
+    m_scaleXValue->SetFont(uiFont);
+    m_scaleXValue->SetText("1.00");
+    m_scaleXValue->SetOnSubmit([this](const std::string& text) {
+        auto* shape = FindSelectedShape();
+        if (!shape) return;
+        try {
+            float v = std::stof(text);
+            shape->SetScaleX(v);
+            char buf[64];
+            std::snprintf(buf, sizeof(buf), "%.2f", shape->GetScaleX());
+            m_scaleXValue->SetText(buf);
+        } catch (...) {
+            M2D_WARN("Invalid Scale X input: ", text);
+        }
+    });
+
+    // ===== Scale Y =====
+    auto* syLabel = m_inspectorPanel->AddChild<m2d::UILabel>();
+    syLabel->SetPosition(20.0f, 240.0f);
+    syLabel->SetFont(uiFont);
+    syLabel->SetText("Scale Y");
+    syLabel->SetColor(200, 200, 200);
+
+    m_scaleYSlider = m_inspectorPanel->AddChild<m2d::UISlider>();
+    m_scaleYSlider->SetPosition(20.0f, 270.0f);
+    m_scaleYSlider->SetSize(RIGHT_W - 130.0f, 20.0f);
+    m_scaleYSlider->SetRange(0.2f, 3.0f);
+    m_scaleYSlider->SetValue(1.0f);
+    m_scaleYSlider->SetOnChange([this](float value) {
+        auto* shape = FindSelectedShape();
+        if (shape) {
+            shape->SetScaleY(value);
+            char buf[64];
+            std::snprintf(buf, sizeof(buf), "%.2f", value);
+            m_scaleYValue->SetText(buf);
+        }
+    });
+
+    m_scaleYValue = m_inspectorPanel->AddChild<m2d::UITextInput>();
+    m_scaleYValue->SetPosition(RIGHT_W - 95.0f, 270.0f);
+    m_scaleYValue->SetSize(70.0f, 20.0f);
+    m_scaleYValue->SetFont(uiFont);
+    m_scaleYValue->SetText("1.00");
+    m_scaleYValue->SetOnSubmit([this](const std::string& text) {
+        auto* shape = FindSelectedShape();
+        if (!shape) return;
+        try {
+            float v = std::stof(text);
+            shape->SetScaleY(v);
+            char buf[64];
+            std::snprintf(buf, sizeof(buf), "%.2f", shape->GetScaleY());
+            m_scaleYValue->SetText(buf);
+        } catch (...) {
+            M2D_WARN("Invalid Scale Y input: ", text);
+        }
+    });
+
+    M2D_INFO("PlayScene entered");
 }
 
 void PlayScene::OnExit() {
@@ -149,44 +228,82 @@ void PlayScene::OnUpdate(float dt) {
 
     const float mx = m_input->GetMouseX();
     const float my = m_input->GetMouseY();
-
     const bool uiHovered = m_engine->GetUI().IsPointOverUI(mx, my);
 
     if (!uiHovered) {
         if (m_input->IsMouseButtonPressed(SDL_BUTTON_LEFT)) {
-            HandleShapeClick(mx, my);
+            OnMousePressed(mx, my);
         }
-
         if (m_input->IsMouseButtonDown(SDL_BUTTON_LEFT)) {
-            HandleShapeDrag(mx, my);
+            OnMouseHeld(mx, my);
         }
     }
 
     if (m_input->IsMouseButtonReleased(SDL_BUTTON_LEFT)) {
-        if (m_dragShape) {
-            m_dragShape = nullptr;
-        }
+        OnMouseReleased();
     }
 
-    // Обновляем видимость и значения инспектора
     UpdateInspector();
 }
 
 void PlayScene::OnRender(m2d::Renderer& renderer) {
     renderer.Clear(30, 30, 30);
-
     for (const auto& shape : m_shapes) {
         shape.Render(renderer);
     }
 }
 
-// ===== Внутреннее =====
+void PlayScene::OnMousePressed(float mx, float my) {
+    m2d::Shape* hit = FindShapeAt(mx, my);
+    if (hit) {
+        m_pressedShape = hit;
+        m_pressStartX = mx;
+        m_pressStartY = my;
+        m_dragStarted = false;
+    } else {
+        DeselectAll();
+        m_pressedShape = nullptr;
+    }
+}
+
+void PlayScene::OnMouseHeld(float mx, float my) {
+    if (m_dragShape) {
+        m_dragShape->MoveBy(mx - m_dragShape->GetCenterX(),
+                            my - m_dragShape->GetCenterY());
+        return;
+    }
+
+    if (m_pressedShape && !m_dragStarted) {
+        const float dx = mx - m_pressStartX;
+        const float dy = my - m_pressStartY;
+        if (std::sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
+            DeselectAll();
+            m_pressedShape->SetSelected(true);
+            m_dragShape = m_pressedShape;
+            m_dragOffsetX = m_pressStartX - m_dragShape->GetCenterX();
+            m_dragOffsetY = m_pressStartY - m_dragShape->GetCenterY();
+            m_dragStarted = true;
+        }
+    }
+}
+
+void PlayScene::OnMouseReleased() {
+    if (m_pressedShape && !m_dragStarted) {
+        if (m_pressedShape->IsSelected()) {
+            m_pressedShape->SetSelected(false);
+        } else {
+            DeselectAll();
+            m_pressedShape->SetSelected(true);
+        }
+    }
+    m_pressedShape = nullptr;
+    m_dragShape = nullptr;
+    m_dragStarted = false;
+}
 
 m2d::Shape* PlayScene::FindShapeAt(float x, float y) {
     for (auto it = m_shapes.rbegin(); it != m_shapes.rend(); ++it) {
-        if (it->ContainsPoint(x, y)) {
-            return &(*it);
-        }
+        if (it->ContainsPoint(x, y)) return &(*it);
     }
     return nullptr;
 }
@@ -204,116 +321,82 @@ void PlayScene::DeselectAll() {
     }
 }
 
-void PlayScene::HandleShapeClick(float mx, float my) {
-    m2d::Shape* hit = FindShapeAt(mx, my);
-
-    if (!hit) {
-        DeselectAll();
-        return;
-    }
-
-    if (hit->IsSelected()) {
-        hit->SetSelected(false);
-        m_dragShape = nullptr;
-    } else {
-        DeselectAll();
-        hit->SetSelected(true);
-    }
-}
-
-void PlayScene::HandleShapeDrag(float mx, float my) {
-    if (m_dragShape) {
-        m_dragShape->MoveTo(mx - m_dragOffsetX, my - m_dragOffsetY);
-        return;
-    }
-
-    m2d::Shape* hit = FindShapeAt(mx, my);
-    if (hit && hit->IsSelected()) {
-        m_dragShape = hit;
-        m_dragOffsetX = mx - hit->GetX();
-        m_dragOffsetY = my - hit->GetY();
-    }
-}
-
 void PlayScene::UpdateInspector() {
     auto* selected = FindSelectedShape();
 
     if (!selected) {
-        // Ничего не выделено — скрыть инспектор
         if (m_inspectorPanel->IsVisible()) {
             m_inspectorPanel->SetVisible(false);
         }
         return;
     }
 
-    // Есть выделенная фигура — показать и обновить
     if (!m_inspectorPanel->IsVisible()) {
         m_inspectorPanel->SetVisible(true);
     }
 
-    // Обновляем тип (на случай, если пользователь выделил другую фигуру)
     std::string typeText = std::string("Type: ") + selected->GetTypeName();
     m_inspectorTypeLabel->SetText(typeText);
 
-    // Обновляем scale
-    const float scale = selected->GetScale();
-    char buf[64];
-    snprintf(buf, sizeof(buf), "Scale: %.2f", scale);
-    m_inspectorScaleLabel->SetText(buf);
+    const float sx = selected->GetScaleX();
+    const float sy = selected->GetScaleY();
 
-    // Обновляем слайдер, только если он не тащится сейчас
-    if (!m_inspectorScaleSlider->IsDragging()) {
-        m_inspectorScaleSlider->SetValue(scale);
+    if (!m_scaleXSlider->IsDragging()) m_scaleXSlider->SetValue(sx);
+    if (!m_scaleYSlider->IsDragging()) m_scaleYSlider->SetValue(sy);
+
+    if (!m_scaleXValue->IsFocused()) {
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "%.2f", sx);
+        m_scaleXValue->SetText(buf);
+    }
+    if (!m_scaleYValue->IsFocused()) {
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "%.2f", sy);
+        m_scaleYValue->SetText(buf);
     }
 }
 
-// ===== Фигуры =====
-
 void PlayScene::AddRandomShape(m2d::Shape::Type type) {
     constexpr float LEFT_W  = 220.0f;
-    constexpr float RIGHT_W = 260.0f;
+    constexpr float RIGHT_W = 280.0f;
     constexpr float MARGIN  = 60.0f;
 
     const int W = m_engine->GetWidth();
     const int H = m_engine->GetHeight();
+    const float half = m2d::Shape::BASE_SIZE * 0.5f;
 
-    const float size = m2d::Shape::BASE_SIZE;
+    const float minCX = LEFT_W + MARGIN + half;
+    const float maxCX = (float)W - RIGHT_W - MARGIN - half;
+    const float minCY = MARGIN + half;
+    const float maxCY = (float)H - MARGIN - 40.0f - half;
 
-    const float minX = LEFT_W + MARGIN;
-    const float maxX = (float)W - RIGHT_W - size - MARGIN;
-    const float minY = MARGIN;
-    const float maxY = (float)H - size - MARGIN - 40.0f;
-
-    if (maxX <= minX || maxY <= minY) {
+    if (maxCX <= minCX || maxCY <= minCY) {
         M2D_WARN("No space for new shape");
         return;
     }
 
-    const float x = RandomFloat(minX, maxX);
-    const float y = RandomFloat(minY, maxY);
+    const float cx = RandomFloat(minCX, maxCX);
+    const float cy = RandomFloat(minCY, maxCY);
 
     static const Uint8 palette[][3] = {
-        { 220,  80,  80 },
-        {  80, 200, 120 },
-        {  80, 140, 220 },
-        { 220, 180,  80 },
-        { 180,  80, 220 },
-        {  80, 200, 200 },
+        { 220,  80,  80 }, {  80, 200, 120 }, {  80, 140, 220 },
+        { 220, 180,  80 }, { 180,  80, 220 }, {  80, 200, 200 },
     };
     const int paletteSize = sizeof(palette) / sizeof(palette[0]);
     const int idx = m_shapeCounter % paletteSize;
     ++m_shapeCounter;
 
-    m_shapes.emplace_back(type, x, y,
+    m_shapes.emplace_back(type, cx, cy,
                           palette[idx][0], palette[idx][1], palette[idx][2]);
-
-    M2D_INFO("Added shape at (", (int)x, ", ", (int)y, ")");
+    M2D_INFO("Added shape at center (", (int)cx, ", ", (int)cy, ")");
 }
 
 void PlayScene::ClearShapes() {
     m_shapes.clear();
     m_shapeCounter = 0;
     m_dragShape = nullptr;
+    m_pressedShape = nullptr;
+    m_dragStarted = false;
     M2D_INFO("Cleared all shapes");
 }
 

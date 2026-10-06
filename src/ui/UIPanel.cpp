@@ -12,29 +12,23 @@ void UIPanel::Update(float dt) {
 void UIPanel::Render(Renderer& renderer) {
     if (!m_visible) return;
 
-    // ===== Фон панели =====
+    // ===== Фон =====
     SDL_FRect bg = GetRect();
     renderer.DrawRect(bg, m_bgR, m_bgG, m_bgB, m_bgA);
 
-    // ===== Граница справа (вертикальная полоса) =====
+    // ===== Граница справа =====
     if (m_hasBorder) {
         SDL_FRect border{ m_x + m_w - 1.0f, m_y, 1.0f, m_h };
         renderer.DrawRect(border, m_borderR, m_borderG, m_borderB, 255);
     }
 
-    // ===== Дочерние элементы =====
-    // Дети рисуются относительно панели: их (x, y) — это смещение внутри панели.
-    // Мы временно смещаем их абсолютные координаты.
+    // ===== Дети — во временных мировых координатах =====
     for (auto& child : m_children) {
-        // Сохраняем исходную позицию
         const float savedX = child->GetX();
         const float savedY = child->GetY();
 
-        // Смещаем на позицию панели
-        child->SetPosition(m_x + savedX, m_y + savedY);
+        child->SetPosition(savedX + m_x, savedY + m_y);
         child->Render(renderer);
-
-        // Возвращаем назад
         child->SetPosition(savedX, savedY);
     }
 }

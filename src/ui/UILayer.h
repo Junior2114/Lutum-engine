@@ -5,6 +5,7 @@
 #include "ui/UIElement.h"
 #include "ui/UIButton.h"
 #include "ui/UISlider.h"
+#include "ui/UITextInput.h"
 #include "graphics/Font.h"
 
 namespace m2d {
@@ -37,7 +38,9 @@ public:
 private:
     void UpdateElement(UIElement* element,
                        float mx, float my,
-                       bool mouseDown, bool mouseReleased);
+                       bool mouseDown, bool mouseReleased,
+                       const Input& input,
+                       float parentOffsetX, float parentOffsetY);
 
     bool IsPointOverElement(const UIElement* element,
                             float x, float y) const;
@@ -47,7 +50,9 @@ private:
     bool  m_visible = true;
 
     bool m_mouseWasDownLastFrame = false;
-    UISlider* m_activeSlider = nullptr;   // слайдер, который тащат
+    UISlider* m_activeSlider = nullptr;
+    float m_activeSliderWorldX = 0.0f;
+    UITextInput* m_focusedInput = nullptr;
 };
 
 } // namespace m2d

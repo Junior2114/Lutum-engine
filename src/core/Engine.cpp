@@ -35,6 +35,9 @@ bool Engine::Init(const char* title, int width, int height) {
         return false;
     }
 
+    // Включаем текстовый ввод — без этого SDL не присылает SDL_EVENT_TEXT_INPUT
+    SDL_StartTextInput(m_window);
+
     if (!SDL_SetRenderVSync(m_renderer, 1)) {
         M2D_WARN("VSync not supported: ", SDL_GetError());
     }
@@ -47,14 +50,11 @@ bool Engine::Init(const char* title, int width, int height) {
     m_lastCounter = SDL_GetPerformanceCounter();
     m_running     = true;
 
-	// В конце Engine::Init, после создания окна:
-	auto* uiFont = m_resources.GetFont("assets/fonts/default.ttf", 18.0f);
-	if (uiFont) {
-		m_ui.Init(uiFont);
-		M2D_INFO("UI font loaded");
-	} else {
-		M2D_WARN("UI font failed to load");
-	}
+    // UI-шрифт
+    auto* uiFont = m_resources.GetFont("assets/fonts/default.ttf", 18.0f);
+    if (uiFont) {
+        m_ui.Init(uiFont);
+    }
 
     M2D_INFO("Engine initialized: ", title, " (", width, "x", height, ")");
     return true;
@@ -77,7 +77,7 @@ void Engine::Run(Game& game) {
         PollEvents();
 
         m_debugOverlay.Update(dt);
-        m_ui.Update(dt, m_input);          // <-- новое
+        m_ui.Update(dt, m_input);
 
         if (m_input.IsKeyPressed(SDL_SCANCODE_F3)) {
             ToggleDebugOverlay();
@@ -86,10 +86,8 @@ void Engine::Run(Game& game) {
         game.OnUpdate(dt);
         game.OnRender(m_rendererWrap);
 
-        // UI поверх игры
-        m_ui.Render(m_rendererWrap);       // <-- новое
+        m_ui.Render(m_rendererWrap);
 
-        // HUD поверх UI
         if (m_showDebugOverlay) {
             m_debugOverlay.Render(m_rendererWrap, m_width, m_height);
         }
@@ -114,6 +112,10 @@ void Engine::PollEvents() {
 void Engine::Shutdown() {
     m_resources.Clear();
 
+    if (m_window) {
+        SDL_StopTextInput(m_window);
+    }
+
     if (m_renderer) {
         SDL_DestroyRenderer(m_renderer);
         m_renderer = nullptr;
@@ -130,7 +132,6 @@ void Engine::Shutdown() {
     }
 
     m_running = false;
-
     Log::Shutdown();
 }
 

@@ -1,57 +1,56 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <string>
 #include "graphics/Renderer.h"
 
 namespace m2d {
 
 class Shape {
 public:
-    enum class Type {
-        Rectangle,
-        Circle,
-        Triangle
-    };
+    enum class Type { Rectangle, Circle, Triangle };
 
-    // Базовый размер одинаков для всех фигур.
     static constexpr float BASE_SIZE = 80.0f;
 
-    Shape(Type type, float x, float y,
+    Shape(Type type, float centerX, float centerY,
           Uint8 r, Uint8 g, Uint8 b)
-        : m_type(type), m_x(x), m_y(y)
+        : m_type(type), m_centerX(centerX), m_centerY(centerY)
         , m_r(r), m_g(g), m_b(b) {}
 
     void Render(Renderer& renderer) const;
 
-    // ===== Попадание =====
+    // ===== Размер (из центра, независимо по X и Y) =====
+    float GetW() const { return BASE_SIZE * m_scaleX; }
+    float GetH() const { return BASE_SIZE * m_scaleY; }
+
+    float GetX() const { return m_centerX - GetW() * 0.5f; }
+    float GetY() const { return m_centerY - GetH() * 0.5f; }
+    float GetCenterX() const { return m_centerX; }
+    float GetCenterY() const { return m_centerY; }
+
+    void SetCenter(float cx, float cy) { m_centerX = cx; m_centerY = cy; }
+    void MoveBy(float dx, float dy) { m_centerX += dx; m_centerY += dy; }
+
     bool ContainsPoint(float px, float py) const {
-        return px >= m_x && px <= m_x + GetW() &&
-               py >= m_y && py <= m_y + GetH();
+        return px >= GetX() && px <= GetX() + GetW() &&
+               py >= GetY() && py <= GetY() + GetH();
     }
 
-    // ===== Позиция =====
-    void MoveTo(float x, float y) { m_x = x; m_y = y; }
-    void MoveBy(float dx, float dy) { m_x += dx; m_y += dy; }
-
-    // ===== Размер =====
-    // Реальный размер = BASE_SIZE * scale.
-    // Scale меняется через инспектор.
-    float GetW() const { return BASE_SIZE * m_scale; }
-    float GetH() const { return BASE_SIZE * m_scale; }
-    float GetBaseSize() const { return BASE_SIZE; }
-
-    void SetScale(float s) {
+    // ===== Scale X / Y =====
+    void SetScaleX(float s) {
         if (s < 0.1f)  s = 0.1f;
         if (s > 10.0f) s = 10.0f;
-        m_scale = s;
+        m_scaleX = s;
     }
-    float GetScale() const { return m_scale; }
+    void SetScaleY(float s) {
+        if (s < 0.1f)  s = 0.1f;
+        if (s > 10.0f) s = 10.0f;
+        m_scaleY = s;
+    }
+    float GetScaleX() const { return m_scaleX; }
+    float GetScaleY() const { return m_scaleY; }
 
     // ===== Цвет =====
-    void SetColor(Uint8 r, Uint8 g, Uint8 b) {
-        m_r = r; m_g = g; m_b = b;
-    }
+    void SetColor(Uint8 r, Uint8 g, Uint8 b) { m_r = r; m_g = g; m_b = b; }
     Uint8 GetR() const { return m_r; }
     Uint8 GetG() const { return m_g; }
     Uint8 GetB() const { return m_b; }
@@ -60,11 +59,8 @@ public:
     void SetSelected(bool s) { m_selected = s; }
     bool IsSelected() const  { return m_selected; }
 
-    // ===== Геттеры =====
+    // ===== Тип =====
     Type GetType() const { return m_type; }
-    float GetX() const { return m_x; }
-    float GetY() const { return m_y; }
-
     const char* GetTypeName() const {
         switch (m_type) {
             case Type::Rectangle: return "Rectangle";
@@ -76,11 +72,11 @@ public:
 
 private:
     Type  m_type;
-    float m_x = 0.0f;
-    float m_y = 0.0f;
-    float m_scale = 1.0f;   // множитель базового размера
+    float m_centerX = 0.0f;
+    float m_centerY = 0.0f;
+    float m_scaleX  = 1.0f;
+    float m_scaleY  = 1.0f;
     Uint8 m_r, m_g, m_b;
-
     bool  m_selected = false;
 };
 

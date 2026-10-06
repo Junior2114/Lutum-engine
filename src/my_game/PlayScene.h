@@ -8,6 +8,8 @@
 #include "ui/UILabel.h"
 #include "ui/UIButton.h"
 #include "ui/UISlider.h"
+#include "ui/UITextInput.h"
+#include "ui/UISeparator.h"
 #include "graphics/Font.h"
 #include "game/Shape.h"
 
@@ -31,8 +33,10 @@ private:
     m2d::Shape* FindShapeAt(float x, float y);
     m2d::Shape* FindSelectedShape();
     void DeselectAll();
-    void HandleShapeClick(float mx, float my);
-    void HandleShapeDrag(float mx, float my);
+
+    void OnMousePressed(float mx, float my);
+    void OnMouseHeld(float mx, float my);
+    void OnMouseReleased();
 
     void UpdateInspector();
 
@@ -45,15 +49,24 @@ private:
     std::vector<m2d::Shape> m_shapes;
     int m_shapeCounter = 0;
 
-    m2d::Shape* m_dragShape = nullptr;
+    m2d::Shape* m_dragShape   = nullptr;
     float m_dragOffsetX = 0.0f;
     float m_dragOffsetY = 0.0f;
 
+    m2d::Shape* m_pressedShape = nullptr;
+    float m_pressStartX = 0.0f;
+    float m_pressStartY = 0.0f;
+    bool  m_dragStarted = false;
+
     // ===== Инспектор =====
-    m2d::UIPanel* m_inspectorPanel = nullptr;
-    m2d::UILabel* m_inspectorTypeLabel = nullptr;
-    m2d::UILabel* m_inspectorScaleLabel = nullptr;
-    m2d::UISlider* m_inspectorScaleSlider = nullptr;
+    m2d::UIPanel*     m_inspectorPanel     = nullptr;
+    m2d::UILabel*     m_inspectorTypeLabel = nullptr;
+
+    m2d::UISlider*    m_scaleXSlider = nullptr;
+    m2d::UITextInput* m_scaleXValue  = nullptr;
+
+    m2d::UISlider*    m_scaleYSlider = nullptr;
+    m2d::UITextInput* m_scaleYValue  = nullptr;
 };
 
 } // namespace mygame

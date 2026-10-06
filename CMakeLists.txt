@@ -23,6 +23,8 @@ add_executable(2DEngine WIN32
     src/ui/UILabel.cpp
     src/ui/UIButton.cpp
     src/ui/UISlider.cpp
+    src/ui/UITextInput.cpp
+    src/ui/UISeparator.cpp
     src/ui/UILayer.cpp
     src/graphics/Texture.cpp
     src/graphics/Renderer.cpp
