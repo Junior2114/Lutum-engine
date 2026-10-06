@@ -54,7 +54,7 @@ private:
 
     Input           m_input;
     Renderer        m_rendererWrap;
-    ResourceManager m_resources;        // <-- НОВОЕ
+    ResourceManager m_resources;
     DebugOverlay    m_debugOverlay;
     bool            m_showDebugOverlay = true;
 };

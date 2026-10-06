@@ -2,9 +2,7 @@
 
 #include "core/Game.h"
 #include "core/Engine.h"
-#include "graphics/Texture.h"
-#include "graphics/Font.h"
-#include "game/Player.h"
+#include "core/SceneManager.h"
 
 namespace mygame {
 
@@ -15,15 +13,12 @@ public:
     void OnRender(m2d::Renderer& renderer) override;
     void OnShutdown() override;
 
+    // Игра даёт сценам доступ к менеджеру сцен
+    m2d::SceneManager& GetSceneManager() { return m_sceneManager; }
+
 private:
-    m2d::Engine* m_engine = nullptr;
-    m2d::Input*  m_input  = nullptr;
-
-    // Не владеющие указатели — ресурсы принадлежат Engine::m_resources
-    m2d::Texture* m_playerSheet = nullptr;
-    m2d::Font*    m_font        = nullptr;
-
-    m2d::Player   m_player;
+    m2d::Engine*       m_engine = nullptr;
+    m2d::SceneManager  m_sceneManager;
 };
 
 } // namespace mygame

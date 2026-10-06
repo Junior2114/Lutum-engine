@@ -17,7 +17,8 @@ add_executable(2DEngine WIN32
     src/main.cpp
     src/core/Engine.cpp
     src/core/Input.cpp
-    src/core/Log.cpp                 # <-- новое
+    src/core/Log.cpp
+    src/core/SceneManager.cpp         # <-- новое
     src/graphics/Texture.cpp
     src/graphics/Renderer.cpp
     src/graphics/Animation.cpp
@@ -27,6 +28,7 @@ add_executable(2DEngine WIN32
     src/graphics/ResourceManager.cpp
     src/game/Player.cpp
     src/my_game/MyGame.cpp
+    src/my_game/PlayScene.cpp         # <-- новое
 )
 
 target_include_directories(2DEngine PRIVATE src)
