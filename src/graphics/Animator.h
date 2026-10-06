@@ -22,6 +22,12 @@ public:
 private:
     std::map<std::string, Animation> m_animations;
 
+    // ===== Кеш активной анимации =====
+    // Указатель на элемент внутри m_animations.
+    // Валиден, пока map не перестраивается (Add не вызывается в рантайме).
+    // Убирает поиск по map в Update и GetCurrentFrame.
+    const Animation* m_currentAnim = nullptr;
+
     std::string m_currentName;
     size_t m_currentFrame = 0;
     float  m_elapsed      = 0.0f;

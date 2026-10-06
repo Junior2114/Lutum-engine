@@ -9,28 +9,29 @@ void Animator::Add(const std::string& name, Animation anim) {
 }
 
 void Animator::Play(const std::string& name, bool reset) {
+    // Если просим ту же анимацию и reset=false — ничего не делаем.
+    // Это критично: Play("walk") вызывается каждый кадр, и мы не должны
+    // сбрасывать анимацию на первый кадр.
     if (name == m_currentName && !reset) {
         return;
     }
 
     auto it = m_animations.find(name);
     if (it == m_animations.end()) {
-        std::cerr << "Animator: animation '" << name << "' not found" << std::endl;
+        std::cerr << "[Animator] animation '" << name << "' not found" << std::endl;
         return;
     }
 
     m_currentName  = name;
+    m_currentAnim  = &it->second;   // кеш указателя — вместо поиска в Update
     m_currentFrame = 0;
     m_elapsed      = 0.0f;
 }
 
 void Animator::Update(float dt) {
-    if (m_currentName.empty()) return;
+    if (!m_currentAnim) return;
 
-    auto it = m_animations.find(m_currentName);
-    if (it == m_animations.end()) return;
-
-    const Animation& anim = it->second;
+    const Animation& anim = *m_currentAnim;
     if (!anim.IsValid()) return;
 
     const float frameTime = anim.GetFrameTime();
@@ -38,16 +39,17 @@ void Animator::Update(float dt) {
 
     m_elapsed += dt;
 
+    // За один кадр может пройти несколько frameTime — обрабатываем while
     while (m_elapsed >= frameTime) {
         m_elapsed -= frameTime;
 
-        size_t frameCount = anim.GetFrameCount();
+        const size_t frameCount = anim.GetFrameCount();
         if (m_currentFrame + 1 >= frameCount) {
             if (anim.IsLooping()) {
                 m_currentFrame = 0;
             } else {
                 m_currentFrame = frameCount - 1;
-                m_elapsed = 0.0f;
+                m_elapsed      = 0.0f;
                 break;
             }
         } else {
@@ -57,12 +59,9 @@ void Animator::Update(float dt) {
 }
 
 bool Animator::GetCurrentFrame(SDL_FRect& outRect) const {
-    if (m_currentName.empty()) return false;
+    if (!m_currentAnim) return false;
 
-    auto it = m_animations.find(m_currentName);
-    if (it == m_animations.end()) return false;
-
-    const Animation& anim = it->second;
+    const Animation& anim = *m_currentAnim;
     if (!anim.IsValid()) return false;
 
     outRect = anim.GetFrame(m_currentFrame);
