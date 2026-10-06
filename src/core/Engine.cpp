@@ -24,7 +24,7 @@ bool Engine::Init(const char* title, int width, int height) {
         return false;
     }
 
-    // D3D11 стабильнее D3D12 для 2D-рендеринга на Windows.
+    // D3D11 стабильнее D3D12 для 2D на Windows
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d11");
 
     if (!SDL_CreateWindowAndRenderer(title, width, height, 0,
@@ -55,12 +55,10 @@ bool Engine::Init(const char* title, int width, int height) {
 }
 
 void Engine::Run(Game& game) {
-    // Даём игре инициализироваться
     game.OnInit(*this);
 
-    // ===== Главный цикл =====
     while (m_running) {
-        // 1. Delta time
+        // ===== 1. Delta time =====
         Uint64 now = SDL_GetPerformanceCounter();
         float dt = (float)((now - m_lastCounter) / m_frequency);
         m_lastCounter = now;
@@ -68,20 +66,32 @@ void Engine::Run(Game& game) {
         if (dt < 0.0f) dt = 0.0f;
         if (dt > 0.1f) dt = 0.1f;
 
-        // 2. Ввод
+        // ===== 2. Ввод =====
         m_input.BeginFrame();
 
-        // 3. События
+        // ===== 3. События =====
         PollEvents();
 
-        // 4. Обновление логики игры
+        // ===== 4. Обновление метрик HUD =====
+        m_debugOverlay.Update(dt);
+
+        // ===== 5. F3 — toggle HUD =====
+        if (m_input.IsKeyPressed(SDL_SCANCODE_F3)) {
+            ToggleDebugOverlay();
+        }
+
+        // ===== 6. Логика игры =====
         game.OnUpdate(dt);
 
-        // 5. Отрисовка игры (в буфер)
+        // ===== 7. Рендер игры =====
         game.OnRender(m_rendererWrap);
 
-        // 6. Показ кадра на экране
-        //    ВОТ ЭТА СТРОКА БЫЛА ПРОПУЩЕНА — без неё картинка не появляется.
+        // ===== 8. Отладочный HUD — поверх всего =====
+        if (m_showDebugOverlay) {
+            m_debugOverlay.Render(m_rendererWrap, m_width, m_height);
+        }
+
+        // ===== 9. Показ кадра =====
         m_rendererWrap.Present();
     }
 
@@ -93,7 +103,6 @@ void Engine::PollEvents() {
     while (SDL_PollEvent(&event)) {
         m_input.ProcessEvent(event);
 
-        // Закрытие окна (крестик) = выход. Esc обрабатывает сама игра.
         if (event.type == SDL_EVENT_QUIT) {
             m_running = false;
         }

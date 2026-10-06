@@ -22,9 +22,11 @@ public:
     void DrawRect(const SDL_FRect& rect, Uint8 r, Uint8 g, Uint8 b, Uint8 a = 255);
 
     // Нарисовать текст. Возвращает ширину отрисованного текста.
-    float DrawText(const Font& font, const std::string& text,
-                   float x, float y,
-                   Uint8 r = 255, Uint8 g = 255, Uint8 b = 255, Uint8 a = 255);
+    // Имя DrawString выбрано специально, чтобы не конфликтовать
+    // с Windows-макросом DrawText -> DrawTextA.
+    float DrawString(const Font& font, const std::string& text,
+                     float x, float y,
+                     Uint8 r = 255, Uint8 g = 255, Uint8 b = 255, Uint8 a = 255);
 
     void Present();
     SDL_Renderer* Get() const { return m_renderer; }

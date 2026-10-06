@@ -40,10 +40,9 @@ void Renderer::DrawRect(const SDL_FRect& rect,
     SDL_RenderFillRect(m_renderer, &rect);
 }
 
-float Renderer::DrawText(const Font& font, const std::string& text,
-                         float x, float y,
-                         Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
-    // Защита: если шрифт не загружен — ничего не рисуем
+float Renderer::DrawString(const Font& font, const std::string& text,
+                           float x, float y,
+                           Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
     if (!font.IsValid()) return 0.0f;
     if (text.empty())    return 0.0f;
 

@@ -22,10 +22,6 @@ private:
     m2d::Texture m_playerSheet;
     m2d::Font    m_font;
     m2d::Player  m_player;
-
-    int   m_fps        = 0;
-    int   m_frameCount = 0;
-    float m_fpsTimer   = 0.0f;
 };
 
 } // namespace mygame

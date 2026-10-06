@@ -24,6 +24,7 @@ add_executable(2DEngine WIN32
     src/graphics/Animation.cpp
     src/graphics/Animator.cpp
     src/graphics/Font.cpp
+    src/graphics/DebugOverlay.cpp
     src/game/Player.cpp
     src/my_game/MyGame.cpp
 )
@@ -35,3 +36,8 @@ target_link_libraries(2DEngine PRIVATE
     SDL3_image::SDL3_image
     SDL3_ttf::SDL3_ttf
 )
+
+# Windows-специфичная библиотека для метрик процесса
+if (WIN32)
+    target_link_libraries(2DEngine PRIVATE psapi)
+endif()

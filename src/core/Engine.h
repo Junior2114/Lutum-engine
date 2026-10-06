@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include "core/Input.h"
 #include "graphics/Renderer.h"
+#include "graphics/DebugOverlay.h"
 
 namespace m2d {
 
@@ -18,15 +19,21 @@ public:
     void Shutdown();
 
     // ===== Доступ к подсистемам для Game =====
-    Input&        GetInput()          { return m_input; }
-    Renderer&     GetRenderer()       { return m_rendererWrap; }
-    SDL_Window*   GetWindow()         { return m_window; }
-    SDL_Renderer* GetSDLRenderer()    { return m_renderer; }
+    Input&        GetInput()       { return m_input; }
+    Renderer&     GetRenderer()    { return m_rendererWrap; }
+    SDL_Window*   GetWindow()      { return m_window; }
+    SDL_Renderer* GetSDLRenderer() { return m_renderer; }
 
     int GetWidth()  const { return m_width; }
     int GetHeight() const { return m_height; }
 
-    // Единственный способ выйти из игры — вызвать это (например, по Esc).
+    DebugOverlay& GetDebugOverlay()       { return m_debugOverlay; }
+
+    void SetDebugOverlayVisible(bool v)   { m_showDebugOverlay = v; }
+    bool IsDebugOverlayVisible() const    { return m_showDebugOverlay; }
+    void ToggleDebugOverlay()             { m_showDebugOverlay = !m_showDebugOverlay; }
+
+    // Единственный способ выйти из игры
     void RequestQuit() { m_running = false; }
 
 private:
@@ -43,8 +50,10 @@ private:
     Uint64 m_lastCounter = 0;
     double m_frequency   = 0.0;
 
-    Input    m_input;
-    Renderer m_rendererWrap;
+    Input        m_input;
+    Renderer     m_rendererWrap;
+    DebugOverlay m_debugOverlay;
+    bool         m_showDebugOverlay = true;
 };
 
 } // namespace m2d
