@@ -7,6 +7,7 @@
 #include "ui/UIPanel.h"
 #include "ui/UILabel.h"
 #include "ui/UIButton.h"
+#include "ui/UISlider.h"
 #include "graphics/Font.h"
 #include "game/Shape.h"
 
@@ -27,11 +28,13 @@ private:
     void AddRandomShape(m2d::Shape::Type type);
     void ClearShapes();
 
-    // Работа с фигурами
     m2d::Shape* FindShapeAt(float x, float y);
+    m2d::Shape* FindSelectedShape();
     void DeselectAll();
     void HandleShapeClick(float mx, float my);
     void HandleShapeDrag(float mx, float my);
+
+    void UpdateInspector();
 
     MyGame* m_game = nullptr;
     m2d::Engine* m_engine = nullptr;
@@ -42,13 +45,15 @@ private:
     std::vector<m2d::Shape> m_shapes;
     int m_shapeCounter = 0;
 
-    // ===== Drag-состояние =====
-    m2d::Shape* m_dragShape = nullptr;   // фигура, которую тащим
-    float m_dragOffsetX = 0.0f;          // смещение между курсором и фигурой
+    m2d::Shape* m_dragShape = nullptr;
+    float m_dragOffsetX = 0.0f;
     float m_dragOffsetY = 0.0f;
 
-    // Для кликов — отслеживаем "был ли клик в этом кадре"
-    bool m_mouseWasDown = false;
+    // ===== Инспектор =====
+    m2d::UIPanel* m_inspectorPanel = nullptr;
+    m2d::UILabel* m_inspectorTypeLabel = nullptr;
+    m2d::UILabel* m_inspectorScaleLabel = nullptr;
+    m2d::UISlider* m_inspectorScaleSlider = nullptr;
 };
 
 } // namespace mygame
