@@ -1,13 +1,17 @@
 #include <SDL3/SDL_main.h>
-#include "core/Application.h"
+#include "core/Engine.h"
+#include "my_game/MyGame.h"
 
 int main(int argc, char* argv[]) {
     (void)argc; (void)argv;
 
-    m2d::Application app;
-    if (!app.Init("My 2D Engine", 1280, 720)) {
+    m2d::Engine engine;
+    if (!engine.Init("My 2D Engine", 1280, 720)) {
         return 1;
     }
-    app.Run();
+
+    mygame::MyGame game;
+    engine.Run(game);
+
     return 0;
 }
