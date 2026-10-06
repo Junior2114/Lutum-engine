@@ -31,6 +31,7 @@ add_executable(2DEngine WIN32
     src/graphics/DebugOverlay.cpp
     src/graphics/ResourceManager.cpp
     src/game/Player.cpp
+    src/game/Shape.cpp
     src/my_game/MyGame.cpp
     src/my_game/PlayScene.cpp
 )

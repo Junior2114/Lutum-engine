@@ -6,26 +6,19 @@
 
 namespace m2d {
 
-// Панель: прямоугольник с фоном, может содержать дочерние элементы.
-// Дочерние элементы позиционируются ОТНОСИТЕЛЬНО панели.
 class UIPanel : public UIElement {
 public:
     UIPanel() = default;
 
-    // ===== Цвет фона =====
     void SetBackgroundColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a = 255) {
         m_bgR = r; m_bgG = g; m_bgB = b; m_bgA = a;
     }
 
-    // ===== Граница =====
     void SetBorder(bool enabled, Uint8 r = 100, Uint8 g = 100, Uint8 b = 120) {
         m_hasBorder = enabled;
         m_borderR = r; m_borderG = g; m_borderB = b;
     }
 
-    // ===== Дочерние элементы =====
-    // Панель владеет дочерними элементами.
-    // Возвращает указатель без владения — можно донастраивать.
     template<typename T, typename... Args>
     T* AddChild(Args&&... args) {
         auto child = std::make_unique<T>(std::forward<Args>(args)...);
@@ -34,7 +27,16 @@ public:
         return raw;
     }
 
-    // ===== Жизненный цикл =====
+    // ===== Доступ к детям (для UILayer) =====
+    const std::vector<std::unique_ptr<UIElement>>& GetChildren() const {
+        return m_children;
+    }
+
+    // Нужно для UpdateElement — вернуть мутабельную ссылку
+    std::vector<std::unique_ptr<UIElement>>& GetChildrenMut() {
+        return m_children;
+    }
+
     void Update(float dt) override;
     void Render(Renderer& renderer) override;
 
