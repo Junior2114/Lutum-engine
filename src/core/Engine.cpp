@@ -24,7 +24,6 @@ bool Engine::Init(const char* title, int width, int height) {
         return false;
     }
 
-    // D3D11 стабильнее D3D12 для 2D на Windows
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d11");
 
     if (!SDL_CreateWindowAndRenderer(title, width, height, 0,
@@ -58,7 +57,6 @@ void Engine::Run(Game& game) {
     game.OnInit(*this);
 
     while (m_running) {
-        // ===== 1. Delta time =====
         Uint64 now = SDL_GetPerformanceCounter();
         float dt = (float)((now - m_lastCounter) / m_frequency);
         m_lastCounter = now;
@@ -66,32 +64,22 @@ void Engine::Run(Game& game) {
         if (dt < 0.0f) dt = 0.0f;
         if (dt > 0.1f) dt = 0.1f;
 
-        // ===== 2. Ввод =====
         m_input.BeginFrame();
-
-        // ===== 3. События =====
         PollEvents();
 
-        // ===== 4. Обновление метрик HUD =====
         m_debugOverlay.Update(dt);
 
-        // ===== 5. F3 — toggle HUD =====
         if (m_input.IsKeyPressed(SDL_SCANCODE_F3)) {
             ToggleDebugOverlay();
         }
 
-        // ===== 6. Логика игры =====
         game.OnUpdate(dt);
-
-        // ===== 7. Рендер игры =====
         game.OnRender(m_rendererWrap);
 
-        // ===== 8. Отладочный HUD — поверх всего =====
         if (m_showDebugOverlay) {
             m_debugOverlay.Render(m_rendererWrap, m_width, m_height);
         }
 
-        // ===== 9. Показ кадра =====
         m_rendererWrap.Present();
     }
 
@@ -102,7 +90,6 @@ void Engine::PollEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         m_input.ProcessEvent(event);
-
         if (event.type == SDL_EVENT_QUIT) {
             m_running = false;
         }
@@ -110,6 +97,9 @@ void Engine::PollEvents() {
 }
 
 void Engine::Shutdown() {
+    // Сначала ресурсы — они владеют текстурами и шрифтами
+    m_resources.Clear();
+
     if (m_renderer) {
         SDL_DestroyRenderer(m_renderer);
         m_renderer = nullptr;

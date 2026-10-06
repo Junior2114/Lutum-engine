@@ -9,12 +9,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
 set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE BOOL "" FORCE)
 
-# ===== Подпроекты =====
 add_subdirectory(vendored/SDL       EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/SDL_ttf   EXCLUDE_FROM_ALL)
 
-# ===== Приложение =====
 add_executable(2DEngine WIN32
     src/main.cpp
     src/core/Engine.cpp
@@ -25,6 +23,7 @@ add_executable(2DEngine WIN32
     src/graphics/Animator.cpp
     src/graphics/Font.cpp
     src/graphics/DebugOverlay.cpp
+    src/graphics/ResourceManager.cpp
     src/game/Player.cpp
     src/my_game/MyGame.cpp
 )
@@ -37,7 +36,6 @@ target_link_libraries(2DEngine PRIVATE
     SDL3_ttf::SDL3_ttf
 )
 
-# Windows-специфичная библиотека для метрик процесса
 if (WIN32)
     target_link_libraries(2DEngine PRIVATE psapi)
 endif()
