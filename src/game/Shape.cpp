@@ -33,33 +33,34 @@ void Shape::Render(Renderer& renderer) const {
             renderer.DrawRect({ x, y, w, h }, m_r, m_g, m_b, 255);
             break;
         }
+
         case Type::Circle: {
+            // Используем DrawEllipseFilled — он даёт гладкий круг через GPU.
+            // Круг — частный случай эллипса с rx == ry.
             const float cx = x + w * 0.5f;
             const float cy = y + h * 0.5f;
             const float rx = w * 0.5f;
             const float ry = h * 0.5f;
-            const int steps = (int)(ry * 2.0f);
-            if (steps <= 0) break;
-            for (int i = -steps; i <= steps; ++i) {
-                const float dy = (float)i / (float)steps * ry;
-                const float r2 = 1.0f - (dy * dy) / (ry * ry);
-                if (r2 < 0.0f) continue;
-                const float half = rx * std::sqrt(r2);
-                renderer.DrawRect({ cx - half, cy + dy, half * 2.0f, 1.0f },
-                                  m_r, m_g, m_b, 255);
-            }
+
+            // Чем больше круг, тем больше сегментов.
+            // 64 — достаточно для любого разумного размера.
+            renderer.DrawEllipseFilled(cx, cy, rx, ry,
+                                       m_r, m_g, m_b, 255,
+                                       64);
             break;
         }
+
         case Type::Triangle: {
-            const int steps = (int)h;
-            if (steps <= 0) break;
-            for (int i = 0; i < steps; ++i) {
-                const float t = (float)i / (float)steps;
-                const float halfW = (w * 0.5f) * t;
-                const float cx = x + w * 0.5f;
-                renderer.DrawRect({ cx - halfW, y + i, halfW * 2.0f, 1.0f },
-                                  m_r, m_g, m_b, 255);
-            }
+            // Один вызов DrawTriangleFilled — три вершины.
+            const float x0 = x + w * 0.5f;
+            const float y0 = y;
+            const float x1 = x;
+            const float y1 = y + h;
+            const float x2 = x + w;
+            const float y2 = y + h;
+
+            renderer.DrawTriangleFilled(x0, y0, x1, y1, x2, y2,
+                                        m_r, m_g, m_b, 255);
             break;
         }
     }
@@ -67,7 +68,7 @@ void Shape::Render(Renderer& renderer) const {
     // ===== Обводка выделения =====
     if (m_selected) {
         constexpr Uint8 OR = 100, OG = 200, OB = 255;
-        constexpr float T = 2.0f;
+        constexpr float T = 2.5f;
 
         switch (m_type) {
             case Type::Rectangle:
@@ -78,22 +79,15 @@ void Shape::Render(Renderer& renderer) const {
                 break;
 
             case Type::Circle: {
-                const float cx = x + w * 0.5f;
-                const float cy = y + h * 0.5f;
-                const float rx = w * 0.5f + 1.0f;
-                const float ry = h * 0.5f + 1.0f;
-                const int segs = std::max(32, (int)(std::max(rx, ry) * 1.5f));
-                const float twoPi = 6.28318530718f;
-                float px = cx + rx, py = cy;
-                for (int i = 1; i <= segs; ++i) {
-                    const float a = twoPi * (float)i / (float)segs;
-                    const float nx = cx + std::cos(a) * rx;
-                    const float ny = cy + std::sin(a) * ry;
-                    DrawLine(renderer, px, py, nx, ny, OR, OG, OB, T);
-                    px = nx; py = ny;
-                }
-                break;
-            }
+				const float cx = x + w * 0.5f;
+				const float cy = y + h * 0.5f;
+				const float rx = w * 0.5f;
+				const float ry = h * 0.5f;
+
+				// segments = 0 → авто (адаптивно к радиусу)
+				renderer.DrawEllipseFilled(cx, cy, rx, ry, m_r, m_g, m_b, 255);
+				break;
+			}
 
             case Type::Triangle:
                 DrawLine(renderer, x + w * 0.5f, y, x, y + h, OR, OG, OB, T);
