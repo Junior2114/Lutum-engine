@@ -17,6 +17,7 @@ add_executable(2DEngine WIN32
     src/main.cpp
     src/core/Engine.cpp
     src/core/Input.cpp
+    src/core/Log.cpp                 # <-- новое
     src/graphics/Texture.cpp
     src/graphics/Renderer.cpp
     src/graphics/Animation.cpp

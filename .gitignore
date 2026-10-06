@@ -73,3 +73,7 @@ ehthumbs.db
 *.bak
 *.orig
 *.rej
+
+# ===== Logs =====
+m2d.log
+*.log

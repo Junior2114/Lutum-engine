@@ -1,7 +1,7 @@
 #include "graphics/Texture.h"
+#include "core/Log.h"
 
 #include <SDL3_image/SDL_image.h>
-#include <iostream>
 #include <utility>
 
 namespace m2d {
@@ -15,14 +15,13 @@ bool Texture::LoadFromFile(SDL_Renderer* renderer, const std::string& path) {
 
     SDL_Texture* loaded = IMG_LoadTexture(renderer, path.c_str());
     if (!loaded) {
-        std::cerr << "Failed to load texture '" << path
-                  << "': " << SDL_GetError() << std::endl;
+        M2D_ERROR("Failed to load texture '", path, "': ", SDL_GetError());
         return false;
     }
 
     float w = 0.0f, h = 0.0f;
     if (!SDL_GetTextureSize(loaded, &w, &h)) {
-        std::cerr << "Failed to get texture size: " << SDL_GetError() << std::endl;
+        M2D_ERROR("Failed to get texture size: ", SDL_GetError());
         SDL_DestroyTexture(loaded);
         return false;
     }
@@ -40,7 +39,7 @@ bool Texture::Create(SDL_Renderer* renderer, int width, int height,
     SDL_Texture* created = SDL_CreateTexture(
         renderer, format, SDL_TEXTUREACCESS_TARGET, width, height);
     if (!created) {
-        std::cerr << "Failed to create texture: " << SDL_GetError() << std::endl;
+        M2D_ERROR("Failed to create texture: ", SDL_GetError());
         return false;
     }
 

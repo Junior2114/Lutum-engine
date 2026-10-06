@@ -1,6 +1,5 @@
 #include "my_game/MyGame.h"
-
-#include <iostream>
+#include "core/Log.h"
 
 namespace mygame {
 
@@ -8,32 +7,29 @@ void MyGame::OnInit(m2d::Engine& engine) {
     m_engine = &engine;
     m_input  = &engine.GetInput();
 
-    auto& resources = engine.GetResources();
+    auto& resources   = engine.GetResources();
     auto* sdlRenderer = engine.GetSDLRenderer();
 
-    // Загрузка через ResourceManager — при повторном запросе вернётся кеш
     m_playerSheet = resources.GetTexture(sdlRenderer,
                                          "assets/textures/player_sheet.png");
     if (!m_playerSheet) {
-        std::cerr << "[MyGame] Warning: player_sheet.png not loaded" << std::endl;
+        M2D_WARN("player_sheet.png not loaded");
     }
 
     m_font = resources.GetFont("assets/fonts/default.ttf", 20.0f);
     if (!m_font) {
-        std::cerr << "[MyGame] Warning: default.ttf not loaded" << std::endl;
+        M2D_WARN("default.ttf not loaded");
     }
 
-    // Привязываем шрифт к DebugOverlay движка
     if (m_font) {
         engine.GetDebugOverlay().Init(m_font);
     }
 
-    // Передаём игроку текстуру — он тоже не владеет
     m_player.Init(m_playerSheet);
 
-    std::cout << "[MyGame] Initialized (textures: "
-              << resources.GetTextureCount()
-              << ", fonts: " << resources.GetFontCount() << ")" << std::endl;
+    M2D_INFO("MyGame initialized (textures: ",
+             resources.GetTextureCount(),
+             ", fonts: ", resources.GetFontCount(), ")");
 }
 
 void MyGame::OnUpdate(float dt) {
@@ -51,7 +47,7 @@ void MyGame::OnRender(m2d::Renderer& renderer) {
 }
 
 void MyGame::OnShutdown() {
-    std::cout << "[MyGame] Shutdown" << std::endl;
+    M2D_INFO("MyGame shutdown");
 }
 
 } // namespace mygame

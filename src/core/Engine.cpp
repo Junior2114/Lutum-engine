@@ -2,7 +2,6 @@
 #include "core/Game.h"
 
 #include <SDL3_ttf/SDL_ttf.h>
-#include <iostream>
 
 namespace m2d {
 
@@ -13,13 +12,15 @@ Engine::~Engine() {
 }
 
 bool Engine::Init(const char* title, int width, int height) {
+    Log::Init("m2d.log");
+
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
+        M2D_ERROR("SDL_Init failed: ", SDL_GetError());
         return false;
     }
 
     if (!TTF_Init()) {
-        std::cerr << "TTF_Init failed: " << SDL_GetError() << std::endl;
+        M2D_ERROR("TTF_Init failed: ", SDL_GetError());
         SDL_Quit();
         return false;
     }
@@ -28,16 +29,14 @@ bool Engine::Init(const char* title, int width, int height) {
 
     if (!SDL_CreateWindowAndRenderer(title, width, height, 0,
                                      &m_window, &m_renderer)) {
-        std::cerr << "Failed to create window/renderer: "
-                  << SDL_GetError() << std::endl;
+        M2D_ERROR("Failed to create window/renderer: ", SDL_GetError());
         TTF_Quit();
         SDL_Quit();
         return false;
     }
 
     if (!SDL_SetRenderVSync(m_renderer, 1)) {
-        std::cerr << "Warning: VSync not supported: "
-                  << SDL_GetError() << std::endl;
+        M2D_WARN("VSync not supported: ", SDL_GetError());
     }
 
     m_rendererWrap = Renderer(m_renderer);
@@ -48,13 +47,14 @@ bool Engine::Init(const char* title, int width, int height) {
     m_lastCounter = SDL_GetPerformanceCounter();
     m_running     = true;
 
-    std::cout << "[Engine] Initialized: " << title
-              << " (" << width << "x" << height << ")" << std::endl;
+    M2D_INFO("Engine initialized: ", title, " (", width, "x", height, ")");
     return true;
 }
 
 void Engine::Run(Game& game) {
+    M2D_INFO("Calling game.OnInit...");
     game.OnInit(*this);
+    M2D_INFO("Entering main loop");
 
     while (m_running) {
         Uint64 now = SDL_GetPerformanceCounter();
@@ -83,6 +83,7 @@ void Engine::Run(Game& game) {
         m_rendererWrap.Present();
     }
 
+    M2D_INFO("Main loop ended");
     game.OnShutdown();
 }
 
@@ -97,7 +98,6 @@ void Engine::PollEvents() {
 }
 
 void Engine::Shutdown() {
-    // Сначала ресурсы — они владеют текстурами и шрифтами
     m_resources.Clear();
 
     if (m_renderer) {
@@ -116,6 +116,8 @@ void Engine::Shutdown() {
     }
 
     m_running = false;
+
+    Log::Shutdown();
 }
 
 } // namespace m2d

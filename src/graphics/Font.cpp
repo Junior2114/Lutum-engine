@@ -1,5 +1,5 @@
 #include "graphics/Font.h"
-#include <iostream>
+#include "core/Log.h"
 
 namespace m2d {
 
@@ -12,8 +12,7 @@ bool Font::LoadFromFile(const std::string& path, float pointSize) {
 
     TTF_Font* loaded = TTF_OpenFont(path.c_str(), pointSize);
     if (!loaded) {
-        std::cerr << "Failed to load font '" << path
-                  << "': " << SDL_GetError() << std::endl;
+        M2D_ERROR("Failed to load font '", path, "': ", SDL_GetError());
         return false;
     }
 

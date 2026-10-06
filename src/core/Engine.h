@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include "core/Input.h"
+#include "core/Log.h"
 #include "graphics/Renderer.h"
 #include "graphics/DebugOverlay.h"
 #include "graphics/ResourceManager.h"
