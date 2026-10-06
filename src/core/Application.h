@@ -4,6 +4,7 @@
 #include "core/Input.h"
 #include "graphics/Texture.h"
 #include "graphics/Renderer.h"
+#include "graphics/Font.h"
 #include "game/Player.h"
 
 namespace m2d {
@@ -33,7 +34,13 @@ private:
     Input    m_input;
     Renderer m_rendererWrap;
     Texture  m_playerSheet;
+    Font     m_font;
     Player   m_player;
+
+    // ===== FPS-счётчик =====
+    int   m_fps        = 0;
+    int   m_frameCount = 0;
+    float m_fpsTimer   = 0.0f;
 };
 
 } // namespace m2d
